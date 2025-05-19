@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "397831753183",
+    "project_id": "gtyjh-395ef",
+    "storage_bucket": "gtyjh-395ef.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:397831753183:android:ce91c032a91c570853886a",
+        "android_client_info": {
+          "package_name": "com.example.furor"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcxyMd9WNyIILnQtnvJ-inmAWqyUAl7bg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
