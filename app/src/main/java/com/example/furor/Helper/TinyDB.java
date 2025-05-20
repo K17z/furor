@@ -42,7 +42,6 @@ import java.util.Map;
 
 
 public class TinyDB {
-
     private SharedPreferences preferences;
     private String DEFAULT_APP_IMAGEDATA_DIRECTORY;
     private String lastImagePath = "";
@@ -357,7 +356,6 @@ public class TinyDB {
 
         return newList;
     }
-
 
     // Put methods
 

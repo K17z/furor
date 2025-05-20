@@ -1,9 +1,8 @@
 package com.example.furor.Activity
 
 
+import android.content.Context
 import android.content.Intent
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -16,6 +15,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,13 +33,19 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
@@ -49,54 +55,54 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.core.content.ContextCompat.startActivity
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.furor.Model.CategoryModel
+import com.example.furor.Model.ItemsModel
 import com.example.furor.Model.SliderModel
 import com.example.furor.R
 import com.example.furor.ViewModel.MainViewModel
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.PagerState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.painter.Painter
-import com.example.furor.Model.CategoryModel
-import com.example.furor.Model.ItemsModel
-import androidx.core.content.ContextCompat.startActivity
-
 
 
 class MainActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MainActivityScreen{
+            MainActivityScreen {
                 startActivity(Intent(this, CartActivity::class.java))
             }
         }
     }
+
+    override fun onDestroy() {
+
+
+        super.onDestroy()
+    }
 }
+
 @Composable
-fun MainActivityScreen(onCartClick:()->Unit) {
-    val viewModel=MainViewModel()
+fun MainActivityScreen(onCartClick: () -> Unit) {
+    val viewModel = MainViewModel()
 
-    val banners= remember { mutableStateListOf<SliderModel>() }
-val categories= remember { mutableStateListOf<CategoryModel>() }
-    val Popular= remember { mutableStateListOf<ItemsModel>() }
-
-
-
+    val banners = remember { mutableStateListOf<SliderModel>() }
+    val categories = remember { mutableStateListOf<CategoryModel>() }
+    val popular = remember { mutableStateListOf<ItemsModel>() }
 
     var showBannerLoading by remember { mutableStateOf(true) }
     var showCategoryLoading by remember { mutableStateOf(true) }
-    var showPopularLoading by remember { mutableStateOf(true)}
+    var showPopularLoading by remember { mutableStateOf(true) }
 
-//banner
+    //banner
     LaunchedEffect(Unit) {
-        viewModel.loadBanner().observeForever{
+        viewModel.loadBanner().observeForever {
             banners.clear()
             banners.addAll(it)
-            showBannerLoading=false
+            showBannerLoading = false
         }
     }
 
@@ -113,19 +119,18 @@ val categories= remember { mutableStateListOf<CategoryModel>() }
     //Popular
     LaunchedEffect(Unit) {
         viewModel.loadpopular().observeForever {
-            Popular.clear()
-            Popular.addAll(it)
+            popular.clear()
+            popular.addAll(it)
             showPopularLoading = false
         }
     }
 
-
     ConstraintLayout(modifier = Modifier.background(Color.White)) {
-        val (scrollist, bottomMenu) = createRefs()
+        val (scrollList, bottomMenu) = createRefs()
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .constrainAs(scrollist) {
+                .constrainAs(scrollList) {
                     top.linkTo(parent.top)
                     bottom.linkTo(parent.bottom)
                     end.linkTo(parent.end)
@@ -158,25 +163,26 @@ val categories= remember { mutableStateListOf<CategoryModel>() }
                         Spacer(modifier = Modifier.width(16.dp))
                         Image(
                             painter = painterResource(R.drawable.bell_icon),
-                                    contentDescription = null
+                            contentDescription = null
                         )
                     }
                 }
             }
 
             //Banners
-            item{
-                if(showBannerLoading){
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .height(200.dp),
-                        contentAlignment = Alignment.Center
-                    ){
-                        CircularProgressIndicator()
+            item {
+                when (showBannerLoading){
+                    true -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .height(200.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
                     }
-                }else{
-                    Banners(banners)
+                    else -> Banners(banners)
                 }
             }
 
@@ -188,45 +194,46 @@ val categories= remember { mutableStateListOf<CategoryModel>() }
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top=24.dp)
+                        .padding(top = 24.dp)
                         .padding(horizontal = 16.dp)
                 )
             }
             item {
-                if (showCategoryLoading){
+                if (showCategoryLoading) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),
                         contentAlignment = Alignment.Center
-                    ){
-                       CircularProgressIndicator()
+                    ) {
+                        CircularProgressIndicator()
                     }
-                }else{
-                   CategoryList(categories)
+                } else {
+                    CategoryList(categories)
                 }
             }
             item {
-                SectionTitle("Самые популярные","Посмотреть все")
+                SectionTitle("Самые популярные", "")
             }
             item {
-                if (showPopularLoading){
-                    Box(modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp),
+                if (showPopularLoading) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
                         contentAlignment = Alignment.Center
-                    ){
+                    ) {
                         CircularProgressIndicator()
                     }
-                }else {
-                    ListItems(Popular)
+                } else {
+                    ListItems(popular)
                 }
             }
         }
         BottomMenu(
             modifier = Modifier
                 .fillMaxWidth()
-                .constrainAs(bottomMenu){
+                .constrainAs(bottomMenu) {
                     bottom.linkTo(parent.bottom)
                 },
             onItemClick = onCartClick
@@ -236,55 +243,57 @@ val categories= remember { mutableStateListOf<CategoryModel>() }
 
 @Composable
 fun CategoryList(categories: SnapshotStateList<CategoryModel>) {
-    var selectedIndex by remember { mutableStateOf(-1) }
-    val context= LocalContext.current
-    LazyRow (
+    var selectedIndex by remember { mutableIntStateOf(-1) }
+    val context = LocalContext.current
+    LazyRow(
         modifier = Modifier
             .fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp),
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp)
-    ){
-        items(categories.size){ index ->
-            CategoryItem(item = categories[index],
-                isSelected = selectedIndex==index,
+    ) {
+        items(categories.size) { index ->
+            CategoryItem(
+                item = categories[index],
+                isSelected = selectedIndex == index,
                 onItemClick = {
-                    selectedIndex=index
+                    selectedIndex = index
                     Handler(Looper.getMainLooper()).postDelayed({
-val intent=Intent(context, ListItemsActivity::class.java).apply {
-    putExtra("id", categories[index].id.toString())
-    putExtra("title", categories[index].title)
-}
-                        startActivity(context,intent,null)
-                    },500)
+                        val intent = Intent(context, ListItemsActivity::class.java).apply {
+                            putExtra("id", categories[index].id.toString())
+                            putExtra("title", categories[index].title)
+                        }
+                        startActivity(context, intent, null)
+                    }, 500)
                 }
             )
         }
     }
 
 }
+
 @Composable
-fun CategoryItem(item:CategoryModel,isSelected:Boolean,onItemClick:()-> Unit){
+fun CategoryItem(item: CategoryModel, isSelected: Boolean, onItemClick: () -> Unit) {
     Column(
         modifier = Modifier
             .clickable(onClick = onItemClick), horizontalAlignment = Alignment.CenterHorizontally
-    ){
+    ) {
         AsyncImage(
             model = (item.picUrl),
             contentDescription = item.title,
             modifier = Modifier
-                .size(if(isSelected)60.dp else 50.dp)
+                .size(if (isSelected) 60.dp else 50.dp)
                 .background(
-                    color = if (isSelected) colorResource(R.color.fiol)else colorResource(R.color.Sandyellow),
+                    color = if (isSelected) colorResource(R.color.fiol) else colorResource(R.color.Sandyellow),
                     shape = RoundedCornerShape(100.dp)
                 ),
             contentScale = ContentScale.Inside,
-            colorFilter = if(isSelected){
+            colorFilter = if (isSelected) {
                 ColorFilter.tint(Color.White)
-            }else{
+            } else {
                 ColorFilter.tint(Color.Black)
 
             }
         )
-        Spacer(modifier = Modifier.padding(top=8.dp))
+        Spacer(modifier = Modifier.padding(top = 8.dp))
         Text(
             text = item.title,
             color = colorResource(R.color.Brown),
@@ -295,16 +304,15 @@ fun CategoryItem(item:CategoryModel,isSelected:Boolean,onItemClick:()-> Unit){
 }
 
 
-
 @Composable
-fun SectionTitle(title: String,actionText: String) {
-    Row (
+fun SectionTitle(title: String, actionText: String) {
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top=24.dp)
+            .padding(top = 24.dp)
             .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween
-    ){
+    ) {
         Text(
             text = title,
             color = Color.Black,
@@ -316,12 +324,11 @@ fun SectionTitle(title: String,actionText: String) {
             color = colorResource(R.color.fiol)
         )
     }
-
 }
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
-fun Banners(banners: SnapshotStateList<SliderModel>){
+fun Banners(banners: SnapshotStateList<SliderModel>) {
     AutoSlidingCarousel(banners = banners)
 }
 
@@ -329,13 +336,11 @@ fun Banners(banners: SnapshotStateList<SliderModel>){
 @Composable
 fun AutoSlidingCarousel(
     modifier: Modifier = Modifier.padding(top = 16.dp),
-    pagerState: PagerState= remember { PagerState() },
+    pagerState: PagerState = remember { PagerState() },
     banners: List<SliderModel>
-){
-
-
-    Column(modifier = modifier.fillMaxSize()){
-        HorizontalPager(count = banners.size, state = pagerState) {page ->
+) {
+    Column(modifier = modifier.fillMaxSize()) {
+        HorizontalPager(count = banners.size, state = pagerState) { page ->
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(banners[page].url)
@@ -344,7 +349,7 @@ fun AutoSlidingCarousel(
                 contentScale = ContentScale.FillBounds,
                 modifier = Modifier
                     .padding(horizontal = 16.dp)
-                    .padding(top=16.dp, bottom = 8.dp)
+                    .padding(top = 16.dp, bottom = 8.dp)
                     .height(150.dp)
             )
         }
@@ -359,25 +364,26 @@ fun AutoSlidingCarousel(
     }
 
 }
+
 @Composable
 fun DotIndicator(
-    modifier: Modifier=Modifier,
-    totalDots:Int,
-    selectedIndex:Int,
-    selectedColor: Color= colorResource(R.color.Brown),
-    unSelectedColor: Color= colorResource(R.color.grey),
+    modifier: Modifier = Modifier,
+    totalDots: Int,
+    selectedIndex: Int,
+    selectedColor: Color = colorResource(R.color.Brown),
+    unSelectedColor: Color = colorResource(R.color.grey),
     dotSize: Dp
-){
+) {
     LazyRow(
         modifier = modifier
             .wrapContentSize()
-    ){
-        items(totalDots){index ->
+    ) {
+        items(totalDots) { index ->
             IndicatorDot(
-                color = if (index==selectedIndex)selectedColor else unSelectedColor,
+                color = if (index == selectedIndex) selectedColor else unSelectedColor,
                 size = dotSize
             )
-            if (index!= totalDots-1){
+            if (index != totalDots - 1) {
                 Spacer(modifier = Modifier.padding(horizontal = 2.dp))
             }
         }
@@ -386,10 +392,10 @@ fun DotIndicator(
 
 @Composable
 fun IndicatorDot(
-    modifier: Modifier=Modifier,
+    modifier: Modifier = Modifier,
     size: Dp,
     color: Color
-){
+) {
     Box(
         modifier = Modifier
             .size(size)
@@ -399,35 +405,49 @@ fun IndicatorDot(
 }
 
 
-
-
 @Composable
-fun BottomMenu(modifier: Modifier,onItemClick: () -> Unit){
+fun BottomMenu(modifier: Modifier, onItemClick: () -> Unit) {
+    val context = LocalContext.current
     Row(
         modifier = modifier
-        .padding(start = 16.dp, end=16.dp, bottom=32.dp)
-        .background(
-            colorResource(R.color.Brown),
-            shape = RoundedCornerShape(10.dp)
-        ),
+            .padding(start = 16.dp, end = 16.dp, bottom = 32.dp)
+            .background(
+                colorResource(R.color.Brown),
+                shape = RoundedCornerShape(10.dp)
+            ),
         horizontalArrangement = Arrangement.SpaceAround
-    ){
+    ) {
         BottomMenuItem(icon = painterResource(R.drawable.btn_1), text = "Explorer")
-        BottomMenuItem(icon = painterResource(R.drawable.btn_2), text = "Cart",onItemClick=onItemClick)
+        BottomMenuItem(
+            icon = painterResource(R.drawable.btn_2),
+            text = "Cart",
+            onItemClick = onItemClick
+        )
         BottomMenuItem(icon = painterResource(R.drawable.btn_3), text = "Favorite")
         BottomMenuItem(icon = painterResource(R.drawable.btn_4), text = "Orders")
-        BottomMenuItem(icon = painterResource(R.drawable.btn_5), text = "Profile")
+        BottomMenuItem(icon = painterResource(R.drawable.btn_5), text = "Profile") {
+
+            startNewActivity(context)
+
+        }
     }
 }
+
+private fun RowScope.startNewActivity(context: Context) {
+    val intent = Intent(context, ProfileActivity::class.java)
+    startActivity(context, intent, null)
+}
+
 @Composable
-fun BottomMenuItem(icon:Painter,text:String,onItemClick:(() -> Unit)?=null){
-    Column (modifier = Modifier
-        .height(70.dp)
-        .clickable { onItemClick?.invoke() }
-        .padding(8.dp),
+fun BottomMenuItem(icon: Painter, text: String, onItemClick: (() -> Unit)? = null) {
+    Column(
+        modifier = Modifier
+            .height(70.dp)
+            .clickable { onItemClick?.invoke() }
+            .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
-    ){
+    ) {
         Icon(icon, contentDescription = text, tint = Color.White)
         Spacer(modifier = Modifier.padding(vertical = 4.dp))
         Text(text, color = Color.White, fontSize = 10.sp)

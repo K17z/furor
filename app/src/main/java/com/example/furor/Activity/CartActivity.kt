@@ -1,5 +1,6 @@
 package com.example.furor.Activity
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -21,7 +22,9 @@ import androidx.compose.material.Text
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -37,95 +40,104 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import coil.compose.rememberAsyncImagePainter
-import com.example.furor.Activity.BaseActivity
 import com.example.furor.Model.ItemsModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+
 import com.example.furor.R
+import com.example.furor.ViewModel.CartItemsViewModal
 import com.example.project1762.Helper.ChangeNumberItemsListener
 import com.example.project1762.Helper.ManagmentCart
 import java.util.ArrayList
 
 class CartActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
-
-
         setContent {
-            CartScreen ( ManagmentCart(this),
-                onBackClick={
+            CartScreen(
+                ManagmentCart(this),
+                onBackClick = {
                     finish()
                 })
         }
     }
 }
 
-fun calculatorCart(managmentCart: ManagmentCart,tax:MutableState<Double>){
+fun calculatorCart(managmentCart: ManagmentCart, tax: MutableState<Double>) {
     val percentTax = 0.02
-    tax.value=Math.round((managmentCart.getTotalFee()*percentTax)*100)/100.0
+    tax.value = Math.round((managmentCart.getTotalFee() * percentTax) * 100) / 100.0
 }
 
+@SuppressLint("MutableCollectionMutableState")
 @Composable
 private fun CartScreen(
     managmentCart: ManagmentCart = ManagmentCart(LocalContext.current),
     onBackClick: () -> Unit
-){
+) {
     val cartItems = remember { mutableStateOf(managmentCart.getListCart()) }
-    val tax = remember { mutableStateOf(0.0) }
+    val tax = remember { mutableDoubleStateOf(0.0) }
+
     calculatorCart(managmentCart, tax)
-    Column (
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
-    ){
-        ConstraintLayout (modifier = Modifier.padding(top = 36.dp)){
-            val (backBtn,cartTxt)= createRefs()
-            Text(modifier = Modifier
-                .fillMaxWidth()
-                .constrainAs(cartTxt){centerTo(parent)}
-                , text = "Ваша корзина",
+    ) {
+        ConstraintLayout(modifier = Modifier.padding(top = 36.dp)) {
+            val (backBtn, cartTxt) = createRefs()
+            Text(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .constrainAs(cartTxt) { centerTo(parent) }, text = "Ваша корзина",
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.Bold,
                 fontSize = 25.sp
             )
-            Image(painter = painterResource(R.drawable.back),
+            Image(
+                painter = painterResource(R.drawable.back),
                 contentDescription = null,
                 modifier = Modifier
                     .clickable { onBackClick() }
-                    .constrainAs(backBtn){
+                    .constrainAs(backBtn) {
                         top.linkTo(parent.top)
                         bottom.linkTo(parent.bottom)
                         start.linkTo(parent.start)
                     }
             )
         }
-        if (cartItems.value.isEmpty()){
-            Text(text = "Корзина пуста", modifier = Modifier.align(Alignment.CenterHorizontally))
-        }else{
-            CartList(cartItems = cartItems.value, managmentCart){
-                cartItems.value=managmentCart.getListCart()
-                calculatorCart(managmentCart,tax)
+        when (cartItems.value.isEmpty()){
+            true ->
+                Text(text = "Корзина пуста", modifier = Modifier.align(Alignment.CenterHorizontally))
+
+            false -> {
+                CartList(cartItems = cartItems.value, managmentCart) {
+                    cartItems.value = managmentCart.getListCart()
+                    calculatorCart(managmentCart, tax)
+                }
+                CartSummary(
+                    itemTotal = managmentCart.getTotalFee(),
+                    tax = tax.doubleValue,
+                    delivery = 100.0
+                )
             }
-            CartSummary(
-                itemTotal=managmentCart.getTotalFee(),
-                tax = tax.value,
-                delivery=10.0
-            )
         }
     }
 }
 
 @Composable
 fun CartSummary(itemTotal: Double, tax: Double, delivery: Double) {
-val total=itemTotal + tax + delivery
+    val total = itemTotal + tax + delivery
 
-
-    Column (
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 16.dp)
-    ){
-        Row (modifier = Modifier
-            .fillMaxWidth()
-            .padding(top=16.dp)){
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp)
+        ) {
             Text(
                 text = "Итоговая цена:",
                 Modifier.weight(1f),
@@ -134,9 +146,11 @@ val total=itemTotal + tax + delivery
             )
             Text(text = "$itemTotal₽")
         }
-        Row (modifier = Modifier
-            .fillMaxWidth()
-            .padding(top=16.dp)){
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp)
+        ) {
             Text(
                 text = "Налог:",
                 Modifier.weight(1f),
@@ -145,9 +159,11 @@ val total=itemTotal + tax + delivery
             )
             Text(text = "$tax")
         }
-        Row (modifier = Modifier
-            .fillMaxWidth()
-            .padding(top=16.dp)){
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp)
+        ) {
             Text(
                 text = "Доставка:",
                 Modifier.weight(1f),
@@ -156,13 +172,16 @@ val total=itemTotal + tax + delivery
             )
             Text(text = "$delivery")
         }
-        Box(modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 16.dp)
-        ){
-            Row (modifier = Modifier
+        Box(
+            modifier = Modifier
                 .fillMaxWidth()
-                .padding(top=16.dp)){
+                .padding(top = 16.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp)
+            ) {
                 Text(
                     text = "Итог:",
                     Modifier.weight(1f),
@@ -181,7 +200,7 @@ val total=itemTotal + tax + delivery
                     .padding(top = 16.dp)
                     .fillMaxWidth()
                     .height(50.dp)
-            ){
+            ) {
                 Text(
                     text = "Проверить",
                     fontSize = 18.sp,
@@ -193,15 +212,18 @@ val total=itemTotal + tax + delivery
 }
 
 @Composable
-fun CartList(cartItems: ArrayList<ItemsModel>, managmentCart: ManagmentCart, onItemChange:() -> Unit)
-{
-    LazyColumn(Modifier.padding(top = 16.dp)){
-        items(cartItems){ item ->
+fun CartList(
+    cartItems: ArrayList<ItemsModel>,
+    managmentCart: ManagmentCart,
+    onItemChange: () -> Unit
+) {
+    LazyColumn(Modifier.padding(top = 16.dp)) {
+        items(cartItems) { item ->
             CartItem(
                 cartItems,
                 item = item,
-                managmentCart=managmentCart,
-                onItemChange=onItemChange
+                managmentCart = managmentCart,
+                onItemChange = onItemChange
             )
         }
     }
@@ -212,14 +234,17 @@ fun CartItem(
     cartItems: ArrayList<ItemsModel>,
     item: ItemsModel,
     managmentCart: ManagmentCart,
-    onItemChange: () -> Unit
+    onItemChange: () -> Unit,
+    cartItemsViewModal: CartItemsViewModal = viewModel()
 ) {
+    val context = LocalContext.current
+
     ConstraintLayout(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 8.dp, bottom = 8.dp)
     ) {
-        val (pic, titleTxt, feeEachItem,totalEachItem, Quantity) = createRefs()
+        val (pic, titleTxt, feeEachItem, totalEachItem, Quantity) = createRefs()
 
         Image(
             painter = rememberAsyncImagePainter(item.picUrl[0]),
@@ -232,41 +257,45 @@ fun CartItem(
                     shape = RoundedCornerShape(10.dp)
                 )
 
-                .constrainAs(pic){
+                .constrainAs(pic) {
                     start.linkTo(parent.start)
                     top.linkTo(parent.top)
                     bottom.linkTo(parent.bottom)
                 }
         )
-        Text(text = item.title,
+        Text(
+            text = item.title,
             modifier = Modifier
-                .constrainAs(titleTxt){
+                .constrainAs(titleTxt) {
                     start.linkTo(pic.end)
                     top.linkTo(pic.top)
                 }
                 .padding(start = 8.dp, top = 8.dp)
         )
-        Text(text="${item.price}₽", color = colorResource(R.color.Brown), modifier = Modifier
-            .constrainAs(feeEachItem){
-                start.linkTo(titleTxt.start)
-                top.linkTo(titleTxt.bottom)
-            }
-            .padding(start = 8.dp, top = 8.dp)
+        Text(
+            text = "${item.price}₽", color = colorResource(R.color.Brown), modifier = Modifier
+                .constrainAs(feeEachItem) {
+                    start.linkTo(titleTxt.start)
+                    top.linkTo(titleTxt.bottom)
+                }
+                .padding(start = 8.dp, top = 8.dp)
         )
-        Text(text="${item.numberInCart*item.price}₽",
-            fontSize =18.sp,
+
+        Text(
+            text = cartItemsViewModal.getFinalPrice(cartItems.indexOf(item).toString(), item.price).toString(),
+            fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier
-                .constrainAs(totalEachItem){
+                .constrainAs(totalEachItem) {
                     start.linkTo(titleTxt.start)
                     bottom.linkTo(pic.bottom)
                 }
-                .padding(start = 8.dp,)
+                .padding(start = 8.dp)
         )
         ConstraintLayout(
             modifier = Modifier
                 .width(100.dp)
-                .constrainAs(Quantity){
+                .constrainAs(Quantity) {
                     end.linkTo(parent.end)
                     bottom.linkTo(parent.bottom)
                 }
@@ -276,40 +305,47 @@ fun CartItem(
                 )
         ) {
             val (plusCartBtn, minusCartBtn, numberItemText) = createRefs()
-            Text(text = item.numberInCart.toString(),
+
+            //Счётчик предметов
+            Text(
+                text = cartItemsViewModal.getCount(cartItems.indexOf(item).toString()).toString(),
                 color = Color.Black,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.constrainAs(numberItemText){
+                modifier = Modifier.constrainAs(numberItemText) {
                     end.linkTo(parent.end)
                     start.linkTo(parent.start)
                     top.linkTo(parent.top)
                     bottom.linkTo(parent.bottom)
                 }
             )
-            Box(modifier = Modifier
-                .padding(2.dp)
-                .size(28.dp)
-                .background(
-                    colorResource(R.color.Brown),
-                    shape = RoundedCornerShape(100.dp)
-                )
-                .constrainAs(plusCartBtn){
-                    end.linkTo(parent.end)
-                    top.linkTo(parent.top)
-                    bottom.linkTo(parent.bottom)
-                }
-                .clickable {
-                    managmentCart.plusItem(
-                        cartItems,
-                        cartItems.indexOf(item),
-                        object :ChangeNumberItemsListener{
-                            override fun onChanged() {
-                                onItemChange()
-                            }
-                        }
+
+            Box(
+                modifier = Modifier
+                    .padding(2.dp)
+                    .size(28.dp)
+                    .background(
+                        colorResource(R.color.Brown),
+                        shape = RoundedCornerShape(100.dp)
                     )
-                }
-            ){
+                    .constrainAs(plusCartBtn) {
+                        end.linkTo(parent.end)
+                        top.linkTo(parent.top)
+                        bottom.linkTo(parent.bottom)
+                    }
+                    .clickable {
+                        cartItemsViewModal.plusCount(cartItems.indexOf(item).toString(), item.price, context)
+
+                        managmentCart.plusItem(
+                            cartItems,
+                            cartItems.indexOf(item),
+                            object : ChangeNumberItemsListener {
+                                override fun onChanged() {
+                                    onItemChange()
+                                }
+                            }
+                        )
+                    }
+            ) {
                 Text(
                     text = "+",
                     color = Color.White,
@@ -322,17 +358,21 @@ fun CartItem(
                     .padding(2.dp)
                     .size(28.dp)
                     .background(
-                        colorResource(R.color.white),
+                        colorResource(R.color.Brown),
                         shape = RoundedCornerShape(100.dp)
                     )
-                    .constrainAs(minusCartBtn){
+                    .constrainAs(minusCartBtn) {
                         start.linkTo(parent.start)
                         top.linkTo(parent.top)
                         bottom.linkTo(parent.bottom)
                     }
                     .clickable {
-                        managmentCart.minusItem(cartItems,
-                            cartItems.indexOf(item),object :ChangeNumberItemsListener{
+                        if (cartItemsViewModal.getCount(cartItems.indexOf(item).toString()) > 0)
+                            cartItemsViewModal.minusCount(cartItems.indexOf(item).toString(), item.price, context)
+
+                        managmentCart.minusItem(
+                            cartItems,
+                            cartItems.indexOf(item), object : ChangeNumberItemsListener {
                                 override fun onChanged() {
                                     onItemChange()
                                 }
@@ -341,11 +381,23 @@ fun CartItem(
             ) {
                 Text(
                     text = "-",
-                    color = colorResource(R.color.Brown),
+                    color = Color.White,
                     modifier = Modifier.align(Alignment.Center),
                     textAlign = TextAlign.Center
                 )
             }
+        }
+    }
+
+    //Триггеры
+
+    //Срабатывает при заходе и выходе со страницы
+    DisposableEffect(Unit) {
+        cartItemsViewModal.loadCounts(context)
+        cartItemsViewModal.loadPrice(context)
+        onDispose {
+            cartItemsViewModal.saveCounts(context)
+            cartItemsViewModal.savePrice(context)
         }
     }
 }

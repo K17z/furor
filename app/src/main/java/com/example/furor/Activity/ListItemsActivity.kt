@@ -31,83 +31,84 @@ import androidx.compose.runtime.setValue
 
 
 class ListItemsActivity : BaseActivity() {
-    private val viewModel=MainViewModel()
-    private var id: String =""
-    private var title: String =""
+    private val viewModel = MainViewModel()
+    private var id: String = ""
+    private var title: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        id = intent.getStringExtra("id") ?:""
-        title = intent.getStringExtra("title") ?:""
+        id = intent.getStringExtra("id") ?: ""
+        title = intent.getStringExtra("title") ?: ""
 
-        setContent{
+        setContent {
             ListItemScreen(
-                title=title,
-                onBackClick= { finish() },
-                viewModel=viewModel,
-                id=id
+                title = title,
+                onBackClick = { finish() },
+                viewModel = viewModel,
+                id = id
 
             )
         }
     }
-@Composable
+
+    @Composable
     private fun ListItemScreen(
-    title: String,
-    onBackClick: () -> Unit,
-    viewModel: MainViewModel,
-    id: String
+        title: String,
+        onBackClick: () -> Unit,
+        viewModel: MainViewModel,
+        id: String
     ) {
         val items by viewModel.loadFiltered(id).observeAsState(emptyList())
         var isLoading by remember { mutableStateOf(true) }
 
         LaunchedEffect(id) {
-        viewModel.loadFiltered(id)
+            viewModel.loadFiltered(id)
         }
 
-    Column (modifier = Modifier.fillMaxSize()){
-        ConstraintLayout (
-            modifier = Modifier.padding(top = 36.dp, start = 16.dp, end = 16.dp)
-        ){
-            val (backBtn, cartTxt) = createRefs()
+        Column(modifier = Modifier.fillMaxSize()) {
+            ConstraintLayout(
+                modifier = Modifier.padding(top = 36.dp, start = 16.dp, end = 16.dp)
+            ) {
+                val (backBtn, cartTxt) = createRefs()
 
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .constrainAs(cartTxt){centerTo(parent)},
-                textAlign = TextAlign.Center,
-                fontWeight = FontWeight.Bold,
-                fontSize = 25.sp,
-                text = title
-            )
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .constrainAs(cartTxt) { centerTo(parent) },
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 25.sp,
+                    text = title
+                )
 
-            Image(
-                painter = painterResource(R.drawable.back),
-                contentDescription = null,
-                modifier = Modifier
-                    .clickable {
-                        onBackClick()
-                    }
-                    .constrainAs(backBtn){
-                        top.linkTo(parent.top)
-                        bottom.linkTo(parent.bottom)
-                        start.linkTo(parent.start)
-                    }
-            )
-        }
-        if(isLoading){
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ){
-                CircularProgressIndicator()
+                Image(
+                    painter = painterResource(R.drawable.back),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .clickable {
+                            onBackClick()
+                        }
+                        .constrainAs(backBtn) {
+                            top.linkTo(parent.top)
+                            bottom.linkTo(parent.bottom)
+                            start.linkTo(parent.start)
+                        }
+                )
             }
-        }else{
-ListItemsFullSize(items)
+            if (isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                ListItemsFullSize(items)
+            }
         }
-    }
-    LaunchedEffect(items) {
-        isLoading = items.isEmpty()
-    }
+        LaunchedEffect(items) {
+            isLoading = items.isEmpty()
+        }
 
     }
 }
