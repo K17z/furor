@@ -23,15 +23,20 @@
             android:exported="false"
             android:theme="@style/Theme.Furor" />
         <activity
+            android:name=".Activity.OrdersActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Activity.FavoriteActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".Activity.CartActivity"
             android:exported="false" />
         <activity
             android:name=".Activity.DetailActivity"
             android:exported="false" />
         <activity android:name=".Activity.ListItemsActivity" />
-        <activity
-            android:name=".loginScreen"
-            android:exported="false" />
+
         <activity
             android:name=".Activity.IntroActivity"
             android:exported="true">

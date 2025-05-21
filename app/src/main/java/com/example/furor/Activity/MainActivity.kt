@@ -149,7 +149,7 @@ fun MainActivityScreen(onCartClick: () -> Unit) {
                     Column {
                         Text("Добро пожаловать", color = Color.Black)
                         Text(
-                            "Илья",
+                            "",
                             color = Color.Black,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold
@@ -171,7 +171,7 @@ fun MainActivityScreen(onCartClick: () -> Unit) {
 
             //Banners
             item {
-                when (showBannerLoading){
+                when (showBannerLoading) {
                     true -> {
                         Box(
                             modifier = Modifier
@@ -182,6 +182,7 @@ fun MainActivityScreen(onCartClick: () -> Unit) {
                             CircularProgressIndicator()
                         }
                     }
+
                     else -> Banners(banners)
                 }
             }
@@ -408,6 +409,7 @@ fun IndicatorDot(
 @Composable
 fun BottomMenu(modifier: Modifier, onItemClick: () -> Unit) {
     val context = LocalContext.current
+
     Row(
         modifier = modifier
             .padding(start = 16.dp, end = 16.dp, bottom = 32.dp)
@@ -423,12 +425,16 @@ fun BottomMenu(modifier: Modifier, onItemClick: () -> Unit) {
             text = "Cart",
             onItemClick = onItemClick
         )
-        BottomMenuItem(icon = painterResource(R.drawable.btn_3), text = "Favorite")
-        BottomMenuItem(icon = painterResource(R.drawable.btn_4), text = "Orders")
+        BottomMenuItem(icon = painterResource(R.drawable.btn_3), text = "Favorite") {
+            startActivity(context, Intent(context, FavoriteActivity::class.java), null)
+        }
+
+        BottomMenuItem(icon = painterResource(R.drawable.btn_4), text = "Orders") {
+            startActivity(context, Intent(context, OrdersActivity::class.java), null)
+        }
+
         BottomMenuItem(icon = painterResource(R.drawable.btn_5), text = "Profile") {
-
             startNewActivity(context)
-
         }
     }
 }

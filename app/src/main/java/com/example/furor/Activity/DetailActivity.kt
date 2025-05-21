@@ -56,6 +56,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import java.util.ArrayList
+import com.example.project1762.Helper.ManagmentFavorite
+import androidx.compose.ui.platform.LocalContext
+
+
 
 
 class DetailActivity : BaseActivity() {
@@ -90,6 +94,11 @@ class DetailActivity : BaseActivity() {
     ) {
         var selectedImageUrl by remember{ mutableStateOf(item.picUrl.first())}
         var selectedModelIndex by remember { mutableStateOf(-1) }
+
+        val context = LocalContext.current
+        val favoriteManager = remember { ManagmentFavorite(context) }
+        var isFavorite by remember { mutableStateOf(favoriteManager.isFavorite(item)) }
+
 
         Column (
             modifier = Modifier
@@ -132,6 +141,35 @@ class DetailActivity : BaseActivity() {
                             start.linkTo(parent.start)
                         }
                 )
+
+
+                IconButton(
+                    onClick = {
+                        if (isFavorite) {
+                            favoriteManager.removeFavorite(item)
+                        } else {
+                            favoriteManager.insertFavorite(item)
+                        }
+                        isFavorite = !isFavorite // <- ВАЖНО: обновляем состояние
+                    },
+                    modifier = Modifier
+                        .padding(top = 48.dp, end = 16.dp)
+                        .constrainAs(fav){
+                            top.linkTo(parent.top)
+                            end.linkTo(parent.end)
+                        }
+                ) {
+                    Icon(
+                        painter = painterResource(
+                            if (isFavorite) R.drawable.ic_fav_filled
+                            else R.drawable.ic_fav_border
+                        ),
+                        contentDescription = "Favorite",
+                        tint = if (isFavorite) Color.Red else Color.Gray
+                    )
+                }
+
+
 
                 LazyRow (
                     modifier = Modifier
@@ -313,4 +351,5 @@ class DetailActivity : BaseActivity() {
             )
         }
     }
+
 }
