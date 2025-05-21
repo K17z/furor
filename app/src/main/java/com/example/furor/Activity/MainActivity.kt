@@ -144,7 +144,7 @@ val categories= remember { mutableStateListOf<CategoryModel>() }
                     Column {
                         Text("Добро пожаловать", color = Color.Black)
                         Text(
-                            "Илья",
+                            "",
                             color = Color.Black,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold
@@ -207,7 +207,7 @@ val categories= remember { mutableStateListOf<CategoryModel>() }
                 }
             }
             item {
-                SectionTitle("Самые популярные","Посмотреть все")
+                SectionTitle("Самые популярные","")
             }
             item {
                 if (showPopularLoading){
@@ -403,6 +403,8 @@ fun IndicatorDot(
 
 @Composable
 fun BottomMenu(modifier: Modifier,onItemClick: () -> Unit){
+    val context = LocalContext.current
+
     Row(
         modifier = modifier
         .padding(start = 16.dp, end=16.dp, bottom=32.dp)
@@ -414,7 +416,10 @@ fun BottomMenu(modifier: Modifier,onItemClick: () -> Unit){
     ){
         BottomMenuItem(icon = painterResource(R.drawable.btn_1), text = "Explorer")
         BottomMenuItem(icon = painterResource(R.drawable.btn_2), text = "Cart",onItemClick=onItemClick)
-        BottomMenuItem(icon = painterResource(R.drawable.btn_3), text = "Favorite")
+        BottomMenuItem(icon = painterResource(R.drawable.btn_3), text = "Favorite") {
+            startActivity(context, Intent(context, FavoriteActivity::class.java), null)
+        }
+
         BottomMenuItem(icon = painterResource(R.drawable.btn_4), text = "Orders")
         BottomMenuItem(icon = painterResource(R.drawable.btn_5), text = "Profile")
     }
