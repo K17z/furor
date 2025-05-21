@@ -19,7 +19,7 @@
  *  and unicode 2017 that are used for separating the items in a list.
  */
 
-package com.example.furor.Helper;
+package com.example.furor.helper;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -31,7 +31,7 @@ import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.example.furor.Model.ItemsModel;
+import com.example.furor.model.ItemsModel;
 import com.google.gson.Gson;
 import java.io.File;
 import java.io.FileOutputStream;

@@ -1,4 +1,4 @@
-package com.example.furor.Activity
+package com.example.furor.activity.component_list
 
 import android.content.Intent
 import androidx.compose.foundation.Image
@@ -34,8 +34,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat.startActivity
 import coil.compose.AsyncImage
-import com.example.furor.Model.ItemsModel
+import com.example.furor.model.ItemsModel
 import com.example.furor.R
+import com.example.furor.activity.DetailActivity
 
 @Composable
 fun PopularItems(items:List<ItemsModel>, pos:Int){
@@ -55,7 +56,7 @@ fun PopularItems(items:List<ItemsModel>, pos:Int){
                     shape = RoundedCornerShape(10.dp))
                 .height(195.dp)
                 .clickable {
-                    val intent = Intent(context,DetailActivity::class.java).apply {
+                    val intent = Intent(context, DetailActivity::class.java).apply {
                         putExtra("object", items[pos])
                     }
                     startActivity(context,intent,null)

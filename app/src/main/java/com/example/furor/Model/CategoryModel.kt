@@ -1,4 +1,4 @@
-package com.example.furor.Model
+package com.example.furor.model
 
 data class CategoryModel(
     val title:String="",

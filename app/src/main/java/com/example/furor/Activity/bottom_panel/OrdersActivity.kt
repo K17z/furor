@@ -1,4 +1,4 @@
-package com.example.furor.Activity
+package com.example.furor.activity.bottom_panel
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.furor.R
 import com.example.project1762.Helper.ManagmentCart
-import com.example.furor.Model.ItemsModel
+import com.example.furor.model.ItemsModel
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import coil.compose.rememberAsyncImagePainter

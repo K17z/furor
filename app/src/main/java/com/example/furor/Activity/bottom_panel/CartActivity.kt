@@ -1,4 +1,4 @@
-package com.example.furor.Activity
+package com.example.furor.activity.bottom_panel
 
 import android.annotation.SuppressLint
 import android.os.Bundle
@@ -40,17 +40,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import coil.compose.rememberAsyncImagePainter
-import com.example.furor.Model.ItemsModel
+import com.example.furor.model.ItemsModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 import com.example.furor.R
-import com.example.furor.ViewModel.CartItemsViewModal
+import com.example.furor.viewModel.CartItemsViewModal
 import com.example.project1762.Helper.ChangeNumberItemsListener
 import com.example.project1762.Helper.ManagmentCart
 import java.util.ArrayList
 import android.widget.Toast
 import android.content.Intent
-
+import com.example.furor.activity.BaseActivity
 
 
 class CartActivity : BaseActivity() {

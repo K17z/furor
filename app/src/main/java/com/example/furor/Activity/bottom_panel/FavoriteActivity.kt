@@ -1,4 +1,4 @@
-package com.example.furor.Activity
+package com.example.furor.activity.bottom_panel
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
@@ -11,11 +11,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.furor.Model.ItemsModel
+import com.example.furor.model.ItemsModel
 import com.example.furor.R
 import com.example.project1762.Helper.ManagmentFavorite
 import coil.compose.AsyncImage
@@ -25,9 +24,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.core.content.ContextCompat.startActivity
 import android.content.Intent
+import com.example.furor.activity.BaseActivity
+import com.example.furor.activity.DetailActivity
 
 class FavoriteActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -1,10 +1,10 @@
-package com.example.furor.Reprository
+package com.example.furor.repository
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.example.furor.Model.CategoryModel
-import com.example.furor.Model.ItemsModel
-import com.example.furor.Model.SliderModel
+import com.example.furor.model.CategoryModel
+import com.example.furor.model.ItemsModel
+import com.example.furor.model.SliderModel
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase

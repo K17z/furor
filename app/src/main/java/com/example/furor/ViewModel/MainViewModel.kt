@@ -1,11 +1,11 @@
-package com.example.furor.ViewModel
+package com.example.furor.viewModel
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
-import com.example.furor.Model.CategoryModel
-import com.example.furor.Model.ItemsModel
-import com.example.furor.Model.SliderModel
-import com.example.furor.Reprository.MainReprository
+import com.example.furor.model.CategoryModel
+import com.example.furor.model.ItemsModel
+import com.example.furor.model.SliderModel
+import com.example.furor.repository.MainReprository
 
 class MainViewModel() : ViewModel() {
     private val reprository = MainReprository()

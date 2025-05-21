@@ -2,8 +2,8 @@ package com.example.project1762.Helper
 
 import android.content.Context
 import android.widget.Toast
-import com.example.furor.Helper.TinyDB
-import com.example.furor.Model.ItemsModel
+import com.example.furor.helper.TinyDB
+import com.example.furor.model.ItemsModel
 
 class ManagmentCart(val context: Context) {
 

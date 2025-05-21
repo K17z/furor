@@ -1,4 +1,4 @@
-package com.example.furor.ViewModel
+package com.example.furor.viewModel
 
 import android.content.Context
 import androidx.lifecycle.ViewModel

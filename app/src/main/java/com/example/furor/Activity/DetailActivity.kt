@@ -1,14 +1,8 @@
-package com.example.furor.Activity
-
-
+package com.example.furor.activity
 
 import android.content.Intent
-import android.media.Rating
 import android.os.Bundle
-import android.widget.RatingBar
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -43,10 +37,8 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import coil.compose.rememberAsyncImagePainter
-import com.example.furor.Model.ItemsModel
+import com.example.furor.model.ItemsModel
 import com.example.furor.R
 import com.example.project1762.Helper.ManagmentCart
 import androidx.compose.runtime.getValue
@@ -58,9 +50,7 @@ import androidx.compose.ui.unit.sp
 import java.util.ArrayList
 import com.example.project1762.Helper.ManagmentFavorite
 import androidx.compose.ui.platform.LocalContext
-
-
-
+import com.example.furor.activity.bottom_panel.CartActivity
 
 class DetailActivity : BaseActivity() {
     private lateinit var item:ItemsModel
@@ -69,7 +59,6 @@ class DetailActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         item=intent.getSerializableExtra("object") as ItemsModel
         managmentCart=ManagmentCart(this)
-
 
         setContent {
             DetailScreen(

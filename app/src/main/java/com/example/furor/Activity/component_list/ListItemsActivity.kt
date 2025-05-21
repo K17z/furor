@@ -1,4 +1,4 @@
-package com.example.furor.Activity
+package com.example.furor.activity.component_list
 
 import android.content.Intent
 import android.os.Bundle
@@ -9,6 +9,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -23,12 +25,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.example.furor.Model.ItemsModel
+import com.example.furor.model.ItemsModel
 import com.example.furor.R
-import com.example.furor.ViewModel.MainViewModel
+import com.example.furor.viewModel.MainViewModel
 import com.example.project1762.Helper.ManagmentFavorite
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.compose.runtime.livedata.observeAsState
+import com.example.furor.activity.BaseActivity
+import com.example.furor.activity.DetailActivity
 
 
 class ListItemsActivity : BaseActivity() {
@@ -110,7 +114,7 @@ class ListItemsActivity : BaseActivity() {
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    androidx.compose.material3.CircularProgressIndicator()
+                    CircularProgressIndicator()
                 }
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.padding(16.dp)) {
@@ -157,7 +161,7 @@ fun FavoriteItemCard(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFFF5F5F5), shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+            .background(Color(0xFFF5F5F5), shape = RoundedCornerShape(12.dp))
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

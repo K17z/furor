@@ -1,6 +1,5 @@
-package com.example.furor.Model
+package com.example.furor.model
 
-import android.media.audiofx.AudioEffect.Descriptor
 import java.io.Serializable
 
 data class ItemsModel(

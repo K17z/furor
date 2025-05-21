@@ -1,11 +1,11 @@
-package com.example.furor.Activity
+package com.example.furor.activity
 
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -58,14 +57,22 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.content.ContextCompat.startActivity
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.furor.Model.CategoryModel
-import com.example.furor.Model.ItemsModel
-import com.example.furor.Model.SliderModel
 import com.example.furor.R
-import com.example.furor.ViewModel.MainViewModel
+import com.example.furor.activity.bottom_panel.CartActivity
+import com.example.furor.activity.bottom_panel.FavoriteActivity
+import com.example.furor.activity.bottom_panel.OrdersActivity
+import com.example.furor.activity.bottom_panel.ProfileActivity
+import com.example.furor.activity.component_list.ListItems
+import com.example.furor.activity.component_list.ListItemsActivity
+import com.example.furor.model.CategoryModel
+import com.example.furor.model.ItemsModel
+import com.example.furor.model.SliderModel
+import com.example.furor.utils.goTo
+import com.example.furor.viewModel.MainViewModel
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.PagerState
+import com.google.firebase.auth.FirebaseAuth
 
 
 class MainActivity : BaseActivity() {
@@ -78,10 +85,26 @@ class MainActivity : BaseActivity() {
         }
     }
 
-    override fun onDestroy() {
+    override fun onStart() {
+        val auth = FirebaseAuth.getInstance()
+        val intent = intent
+        val getStr = intent.extras!!
+        val email = getStr.getString("email").toString() // получи ранее сохранённый email
 
+        if (auth.isSignInWithEmailLink(intent.dataString!!)) {
+            auth.signInWithEmailLink(email, intent.dataString!!)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        Log.d("Auth", "Вход выполнен успешно!")
+                        val user = task.result?.user
 
-        super.onDestroy()
+                    } else {
+                        Log.e("Auth", "Ошибка входа", task.exception)
+                    }
+                }
+        }
+
+        super.onStart()
     }
 }
 
@@ -169,7 +192,6 @@ fun MainActivityScreen(onCartClick: () -> Unit) {
                 }
             }
 
-            //Banners
             item {
                 when (showBannerLoading) {
                     true -> {
@@ -200,34 +222,37 @@ fun MainActivityScreen(onCartClick: () -> Unit) {
                 )
             }
             item {
-                if (showCategoryLoading) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
+                when (showCategoryLoading) {
+                    true -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
                     }
-                } else {
-                    CategoryList(categories)
+                    false -> CategoryList(categories)
                 }
             }
             item {
                 SectionTitle("Самые популярные", "")
             }
             item {
-                if (showPopularLoading) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
+                when (showPopularLoading) {
+                    true -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
                     }
-                } else {
-                    ListItems(popular)
+                    false -> ListItems(popular)
+
                 }
             }
         }
@@ -426,22 +451,17 @@ fun BottomMenu(modifier: Modifier, onItemClick: () -> Unit) {
             onItemClick = onItemClick
         )
         BottomMenuItem(icon = painterResource(R.drawable.btn_3), text = "Favorite") {
-            startActivity(context, Intent(context, FavoriteActivity::class.java), null)
+            goTo(FavoriteActivity::class.java, context)
         }
 
         BottomMenuItem(icon = painterResource(R.drawable.btn_4), text = "Orders") {
-            startActivity(context, Intent(context, OrdersActivity::class.java), null)
+            goTo(OrdersActivity::class.java, context)
         }
 
         BottomMenuItem(icon = painterResource(R.drawable.btn_5), text = "Profile") {
-            startNewActivity(context)
+            goTo(ProfileActivity::class.java, context)
         }
     }
-}
-
-private fun RowScope.startNewActivity(context: Context) {
-    val intent = Intent(context, ProfileActivity::class.java)
-    startActivity(context, intent, null)
 }
 
 @Composable

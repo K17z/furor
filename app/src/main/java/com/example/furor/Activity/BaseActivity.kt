@@ -1,4 +1,4 @@
-package com.example.furor.Activity
+package com.example.furor.activity
 
 import android.os.Bundle
 import android.view.View
@@ -13,7 +13,6 @@ open class BaseActivity : AppCompatActivity() {
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
         )
-
 
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)

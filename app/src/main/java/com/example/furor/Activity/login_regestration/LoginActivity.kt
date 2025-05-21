@@ -1,4 +1,4 @@
-package com.example.furor.Activity
+package com.example.furor.activity.login_regestration
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
@@ -13,17 +13,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import com.example.furor.Model.User
-import com.example.furor.R
+import com.example.furor.activity.MainActivity
+import com.example.furor.model.User
 import com.example.furor.utils.Constants.NODE_USERS
 import com.example.furor.utils.goTo
 import com.example.furor.utils.mainFieldStyle
@@ -32,7 +29,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 
 lateinit var AUTH: FirebaseAuth
@@ -46,11 +45,21 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        initFirebase()
         enableEdgeToEdge()
         setContent {
             InitUserLoginActivity() //Инициализируем пользователя
         }
 
+    }
+
+    fun initFirebase() {
+        AUTH = FirebaseAuth.getInstance()
+        REF_DATABASE_ROOT = FirebaseDatabase.getInstance().reference
+        USER = User()
+        UID = AUTH.currentUser?.uid.toString()
+        REF_STORAGE_ROOT = FirebaseStorage.getInstance().reference
+        context = this
     }
 
     @Composable
@@ -91,8 +100,8 @@ class LoginActivity : AppCompatActivity() {
                 horizontalAlignment = Alignment.CenterHorizontally
             )
             {
-                val phone = mainFieldStyle(
-                    labelText = "Номер телефона",
+                val email = mainFieldStyle(
+                    labelText = "Электронная почта",
                     enable = true,
                     maxLine = 1
                 ) {}
@@ -106,18 +115,21 @@ class LoginActivity : AppCompatActivity() {
                 Spacer(modifier = Modifier.padding(120.dp))
                 Button(
                     onClick = {
-                        var pattern = Regex("[^\\d+]")
-                        var formattedPhone = phone.replace(pattern, "")
-                        formattedPhone = if (!formattedPhone.startsWith("+")) "+$formattedPhone" else formattedPhone
-                        pattern = Regex("(\\+\\d+)(\\d{3})(\\d{3})(\\d{4})")
-
-                        formattedPhone = pattern.replace(formattedPhone) { match ->
-                            "${match.groups[1]?.value}" +
-                                    " ${match.groups[2]?.value}" +
-                                    "-${match.groups[3]?.value}" +
-                                    "-${match.groups[4]?.value}"
+                        if (email.isNotEmpty()){
+//                            var pattern = Regex("[^\\d+]")
+//                            var formattedPhone = email.replace(pattern, "")
+//                            formattedPhone = if (!formattedPhone.startsWith("+")) "+$formattedPhone" else formattedPhone
+//                            pattern = Regex("(\\+\\d+)(\\d{3})(\\d{3})(\\d{4})")
+//
+//                            formattedPhone = pattern.replace(formattedPhone) { match ->
+//                                "${match.groups[1]?.value}" +
+//                                        " ${match.groups[2]?.value}" +
+//                                        "-${match.groups[3]?.value}" +
+//                                        "-${match.groups[4]?.value}"
+//                            }
+                            //checkPhone(/*formattedPhone*/phone, password)
                         }
-                        //checkPhone(/*formattedPhone*/phone, password)
+
                     }
                 ) { Text("Sing in", fontSize = 18.sp) }
 

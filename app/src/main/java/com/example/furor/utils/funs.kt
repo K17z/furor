@@ -13,6 +13,16 @@ fun <templateActivity : Activity> goTo(
     context.startActivity(intent)
 }
 
+fun <templateActivity> goTo(
+    activity: Class<templateActivity>,
+    context: Activity,
+    email: String,
+) {
+    val intent = Intent(context, activity)
+    intent.putExtra("email", email)
+    context.startActivity(intent)
+}
+
 fun makeToast(msg: String, context: Context) {
     Toast
         .makeText(context, msg, Toast.LENGTH_LONG)

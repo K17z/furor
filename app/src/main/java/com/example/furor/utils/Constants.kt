@@ -37,5 +37,4 @@ object Constants {
     const val CHILD_FROM: String = "from"
     const val CHILD_TIME_STAMP: String = "timeStamp"
 
-
 }

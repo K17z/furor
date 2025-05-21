@@ -1,7 +1,8 @@
-package com.example.furor.Activity
+package com.example.furor.activity
 
 import android.content.Intent
 import android.os.Bundle
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -21,47 +22,52 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.furor.R
+import com.example.furor.activity.login_regestration.LoginActivity
 
 class IntroActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContent { IntroScreen(
-            onClick = {
-                startActivity(Intent(this, MainActivity::class.java))
-            }
-        ) }
+        setContent {
+            IntroScreen(
+                onClick = {
+                    startActivity(Intent(this, LoginActivity::class.java))
+                }
+            )
+        }
     }
 }
+
 @Composable
 @Preview
 
-fun IntroScreen(onClick:()->Unit={}){
-Image(
-    painter= painterResource(id= R.drawable.background2),
-    contentDescription = null,
-    modifier = Modifier
-        .background(Color.White)
-        .fillMaxSize(),
-    contentScale = ContentScale.Crop
-)
-    Column (
+fun IntroScreen(onClick: () -> Unit = {}) {
+    Image(
+        painter = painterResource(id = R.drawable.background2),
+        contentDescription = null,
+        modifier = Modifier
+            .background(Color.White)
+            .fillMaxSize(),
+        contentScale = ContentScale.Crop
+    )
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally)
+        horizontalAlignment = Alignment.CenterHorizontally
+    )
     {
         Image(
-            painter = painterResource(id= R.drawable.furor2),
+            painter = painterResource(id = R.drawable.furor2),
             contentDescription = null,
             modifier = Modifier
-                .padding(top=8.dp)
+                .padding(top = 8.dp)
                 .fillMaxSize(),
             contentScale = ContentScale.Fit
         )
         Image(
-            painter = painterResource(id= R.drawable.title2),
+            painter = painterResource(id = R.drawable.title2),
             contentDescription = null,
             modifier = Modifier
                 .padding(16.dp)
@@ -69,7 +75,7 @@ Image(
             contentScale = ContentScale.Fit
         )
         Image(
-            painter = painterResource(id= R.drawable.go_corrected2),
+            painter = painterResource(id = R.drawable.go_corrected2),
             contentDescription = null,
             modifier = Modifier
                 .padding(top = 8.dp)
