@@ -51,4 +51,20 @@ class ManagmentCart(val context: Context) {
         }
         return fee
     }
+
+    fun placeOrder() {
+        val currentCart = getListCart()
+        if (currentCart.isEmpty()) return
+
+        val orders = tinyDB.getListObject("OrdersList") ?: arrayListOf<ItemsModel>()
+        val newOrders = currentCart.map { it.copy() }
+        orders.addAll(newOrders)
+        tinyDB.putListObject("OrdersList", orders)
+        tinyDB.putListObject("CartList", arrayListOf())
+    }
+
+    fun getOrders(): ArrayList<ItemsModel> {
+        return tinyDB.getListObject("OrdersList") ?: arrayListOf()
+    }
+
 }

@@ -43,6 +43,10 @@ import com.example.furor.R
 import com.example.project1762.Helper.ChangeNumberItemsListener
 import com.example.project1762.Helper.ManagmentCart
 import java.util.ArrayList
+import android.widget.Toast
+import android.content.Intent
+
+
 
 class CartActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -105,17 +109,22 @@ private fun CartScreen(
                 calculatorCart(managmentCart,tax)
             }
             CartSummary(
-                itemTotal=managmentCart.getTotalFee(),
+                itemTotal = managmentCart.getTotalFee(),
                 tax = tax.value,
-                delivery=10.0
+                delivery = 10.0,
+                managmentCart = managmentCart
             )
+
         }
     }
 }
 
+
 @Composable
-fun CartSummary(itemTotal: Double, tax: Double, delivery: Double) {
-val total=itemTotal + tax + delivery
+fun CartSummary(itemTotal: Double, tax: Double, delivery: Double, managmentCart: ManagmentCart) {
+    val context = LocalContext.current
+
+    val total=itemTotal + tax + delivery
 
 
     Column (
@@ -172,7 +181,11 @@ val total=itemTotal + tax + delivery
                 Text(text = "$total")
             }
             Button(
-                onClick = {},
+                onClick = {
+                    managmentCart.placeOrder()
+                    Toast.makeText(context, "Заказ оформлен", Toast.LENGTH_SHORT).show()
+                    context.startActivity(Intent(context, OrdersActivity::class.java))
+                },
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = colorResource(R.color.Brown)
@@ -183,7 +196,7 @@ val total=itemTotal + tax + delivery
                     .height(50.dp)
             ){
                 Text(
-                    text = "Проверить",
+                    text = "Оформить заказ",
                     fontSize = 18.sp,
                     color = Color.White
                 )

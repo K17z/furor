@@ -420,7 +420,10 @@ fun BottomMenu(modifier: Modifier,onItemClick: () -> Unit){
             startActivity(context, Intent(context, FavoriteActivity::class.java), null)
         }
 
-        BottomMenuItem(icon = painterResource(R.drawable.btn_4), text = "Orders")
+        BottomMenuItem(icon = painterResource(R.drawable.btn_4), text = "Orders") {
+            startActivity(context, Intent(context, OrdersActivity::class.java), null)
+        }
+
         BottomMenuItem(icon = painterResource(R.drawable.btn_5), text = "Profile")
     }
 }
