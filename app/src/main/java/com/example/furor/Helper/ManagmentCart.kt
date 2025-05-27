@@ -4,30 +4,38 @@ import android.content.Context
 import android.widget.Toast
 import com.example.furor.helper.TinyDB
 import com.example.furor.model.ItemsModel
+import com.example.furor.model.OrderModel
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 
-class ManagmentCart(val context: Context) {
+class ManagmentCart(private val context: Context) {
 
     private val tinyDB = TinyDB(context)
 
-    fun insertItem(item: ItemsModel) {
-        var listItem = getListCart()
-        val existAlready = listItem.any { it.title == item.title }
-        val index = listItem.indexOfFirst { it.title == item.title }
+    /** Возвращает список текущих элементов в корзине */
+    fun getListCart(): ArrayList<ItemsModel> {
+        return tinyDB.getListObject("CartList") ?: arrayListOf()
+    }
 
-        if (existAlready) {
+    /** Добавляет или обновляет товар в корзине */
+    fun insertItem(item: ItemsModel) {
+        val listItem = getListCart()
+        val index = listItem.indexOfFirst { it.title == item.title }
+        if (index >= 0) {
             listItem[index].numberInCart = item.numberInCart
         } else {
             listItem.add(item)
         }
         tinyDB.putListObject("CartList", listItem)
-        Toast.makeText(context, "Added to your Cart", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "Добавлено в корзину", Toast.LENGTH_SHORT).show()
     }
 
-    fun getListCart(): ArrayList<ItemsModel> {
-        return tinyDB.getListObject("CartList") ?: arrayListOf()
-    }
-
-    fun minusItem(listItem: ArrayList<ItemsModel>, position: Int, listener: ChangeNumberItemsListener) {
+    /** Уменьшает количество или удаляет товар из корзины */
+    fun minusItem(
+        listItem: ArrayList<ItemsModel>,
+        position: Int,
+        listener: ChangeNumberItemsListener
+    ) {
         if (listItem[position].numberInCart == 1) {
             listItem.removeAt(position)
         } else {
@@ -37,34 +45,68 @@ class ManagmentCart(val context: Context) {
         listener.onChanged()
     }
 
-    fun plusItem(listItem: ArrayList<ItemsModel>, position: Int, listener: ChangeNumberItemsListener) {
+    /** Увеличивает количество товара в корзине */
+    fun plusItem(
+        listItem: ArrayList<ItemsModel>,
+        position: Int,
+        listener: ChangeNumberItemsListener
+    ) {
         listItem[position].numberInCart++
         tinyDB.putListObject("CartList", listItem)
         listener.onChanged()
     }
 
-    fun getTotalFee(): Double {
-        val listItem = getListCart()
-        var fee = 0.0
-        for (item in listItem) {
-            fee += item.price * item.numberInCart
-        }
-        return fee
-    }
+    /** Общая сумма всех товаров в корзине */
+    fun getTotalFee(): Double =
+        getListCart().sumOf { it.price * it.numberInCart }
 
+    /**
+     * Оформление заказа:
+     * 1) Пушим все позиции в Firebase под /orders/{uid}
+     * 2) Очищаем локальную корзину
+     */
     fun placeOrder() {
-        val currentCart = getListCart()
-        if (currentCart.isEmpty()) return
+        val cart = getListCart()
+        if (cart.isEmpty()) {
+            Toast.makeText(context, "Корзина пуста", Toast.LENGTH_SHORT).show()
+            return
+        }
 
-        val orders = tinyDB.getListObject("OrdersList") ?: arrayListOf<ItemsModel>()
-        val newOrders = currentCart.map { it.copy() }
-        orders.addAll(newOrders)
-        tinyDB.putListObject("OrdersList", orders)
-        tinyDB.putListObject("CartList", arrayListOf())
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        if (uid == null) {
+            Toast.makeText(context, "Сначала войдите в аккаунт", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val ordersRef = FirebaseDatabase
+            .getInstance()
+            .getReference("orders")
+            .child(uid)
+
+        // Генерируем один orderId для всего текущего заказа
+        val orderId = ordersRef.push().key ?: return
+
+        // Составляем модель заказа
+        val order = OrderModel(
+            orderId = orderId,
+            timestamp = System.currentTimeMillis(),
+            items = cart.toList()
+        )
+
+        // Сохраняем всю модель за один вызов
+        ordersRef.child(orderId).setValue(order)
+            .addOnSuccessListener {
+                // очистка корзины
+                tinyDB.putListObject("CartList", arrayListOf())
+                Toast.makeText(context, "Заказ оформлен", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener {
+                Toast.makeText(context, "Ошибка оформления: ${it.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 
-    fun getOrders(): ArrayList<ItemsModel> {
-        return tinyDB.getListObject("OrdersList") ?: arrayListOf()
-    }
 
+    /** (Опционально) старый локальный список оформленных заказов */
+    fun getOrders(): ArrayList<ItemsModel> =
+        tinyDB.getListObject("OrdersList") ?: arrayListOf()
 }

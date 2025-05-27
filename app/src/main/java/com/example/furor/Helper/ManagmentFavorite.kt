@@ -1,54 +1,62 @@
 package com.example.project1762.Helper
 
 import android.content.Context
-import android.content.SharedPreferences
-import android.util.Log
+import android.widget.Toast
 import com.example.furor.model.ItemsModel
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.*
 
-class ManagmentFavorite(context: Context) {
-    private val sharedPreferences: SharedPreferences =
-        context.getSharedPreferences("FavoritePrefs", Context.MODE_PRIVATE)
-    private val gson = Gson()
+class ManagmentFavorite(private val context: Context) {
+    private val auth = FirebaseAuth.getInstance()
+    // корень узла favorites
+    private val dbRef: DatabaseReference =
+        FirebaseDatabase.getInstance().getReference("favorites")
 
-    fun getFavoriteList(): ArrayList<ItemsModel> {
-        val json = sharedPreferences.getString("favorites", null)
-        return try {
-            if (json.isNullOrEmpty()) arrayListOf()
-            else {
-                val type = object : TypeToken<ArrayList<ItemsModel>>() {}.type
-                gson.fromJson(json, type) ?: arrayListOf()
-            }
-        } catch (e: Exception) {
-            Log.e("FavoriteError", "Ошибка парсинга избранного: ${e.message}")
-            arrayListOf()
+    private val uid: String
+        get() = auth.currentUser?.uid.orEmpty()
+
+    /** Добавляет товар в избранное у текущего пользователя */
+    fun addFavorite(item: ItemsModel) {
+        if (uid.isEmpty()) {
+            Toast.makeText(context, "Сначала войдите в аккаунт", Toast.LENGTH_SHORT).show()
+            return
         }
+        // создаём новую запись под уникальным ключом
+        val favRef = dbRef.child(uid).push()
+        favRef.setValue(item)
     }
 
-    fun insertFavorite(item: ItemsModel) {
-        val list = getFavoriteList()
-        if (list.none { it.title == item.title }) {
-            list.add(item.copy())  // используем копию
-            saveList(list)
-        }
-    }
-
+    /** Удаляет товар из избранного по совпадению title */
     fun removeFavorite(item: ItemsModel) {
-        val list = getFavoriteList().filterNot { it.title == item.title }
-        saveList(ArrayList(list))
+        if (uid.isEmpty()) return
+        val ref = dbRef.child(uid)
+        // находим все записи с таким заголовком и удаляем
+        ref.orderByChild("title").equalTo(item.title)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    snapshot.children.forEach { it.ref.removeValue() }
+                }
+                override fun onCancelled(error: DatabaseError) {
+                    // можно логировать ошибку
+                }
+            })
     }
 
-    fun isFavorite(item: ItemsModel): Boolean {
-        return getFavoriteList().any { it.title == item.title }
-    }
-
-    private fun saveList(list: ArrayList<ItemsModel>) {
-        try {
-            val json = gson.toJson(list)
-            sharedPreferences.edit().putString("favorites", json).apply()
-        } catch (e: Exception) {
-            Log.e("FavoriteError", "Ошибка сохранения избранного: ${e.message}")
+    /** Проверяет, есть ли товар в избранном у текущего пользователя */
+    fun isFavorite(item: ItemsModel, callback: (Boolean) -> Unit) {
+        if (uid.isEmpty()) {
+            callback(false)
+            return
         }
+        val ref = dbRef.child(uid)
+        ref.orderByChild("title").equalTo(item.title)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    callback(snapshot.exists())
+                }
+                override fun onCancelled(error: DatabaseError) {
+                    callback(false)
+                }
+            })
     }
 }

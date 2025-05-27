@@ -3,7 +3,6 @@ package com.example.furor.activity.component_list
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,6 +14,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,15 +25,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.example.furor.model.ItemsModel
 import com.example.furor.R
-import com.example.furor.viewModel.MainViewModel
-import com.example.project1762.Helper.ManagmentFavorite
-import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.compose.runtime.livedata.observeAsState
 import com.example.furor.activity.BaseActivity
 import com.example.furor.activity.DetailActivity
-
+import com.example.furor.model.ItemsModel
+import com.example.furor.viewModel.MainViewModel
+import com.example.project1762.Helper.ManagmentFavorite
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 
 class ListItemsActivity : BaseActivity() {
     private val viewModel = MainViewModel()
@@ -44,7 +43,6 @@ class ListItemsActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         id = intent.getStringExtra("id") ?: ""
         title = intent.getStringExtra("title") ?: ""
-
         setContent {
             ListItemScreen(
                 title = title,
@@ -65,47 +63,44 @@ class ListItemsActivity : BaseActivity() {
         val context = LocalContext.current
         val favoriteManager = remember { ManagmentFavorite(context) }
 
-        val items by viewModel.loadFiltered(id).observeAsState(emptyList())
+        // подгружаем из Firebase
+        val items by viewModel.loadFiltered(id)
+            .observeAsState(initial = emptyList<ItemsModel>())
         var isLoading by remember { mutableStateOf(true) }
 
-        val favoriteStates = remember {
-            mutableStateMapOf<String, Boolean>().apply {
-                items.forEach { item ->
-                    this[item.title] = favoriteManager.isFavorite(item)
+        // статус «избранного» для каждого title
+        val favoriteStates = remember { mutableStateMapOf<String, Boolean>() }
+
+        // после получения items — снимаем загрузку и проверяем избранное
+        LaunchedEffect(items) {
+            isLoading = false
+            items.forEach { item ->
+                favoriteManager.isFavorite(item) { fav ->
+                    favoriteStates[item.title] = fav
                 }
             }
         }
 
-        LaunchedEffect(id) {
-            viewModel.loadFiltered(id)
-        }
-
         Column(modifier = Modifier.fillMaxSize()) {
-            ConstraintLayout(
-                modifier = Modifier.padding(top = 36.dp, start = 16.dp, end = 16.dp)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 36.dp, start = 16.dp, end = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                val (backBtn, cartTxt) = createRefs()
-
+                IconButton(onClick = onBackClick) {
+                    Icon(
+                        imageVector = Icons.Filled.ArrowBack,
+                        contentDescription = "Назад"
+                    )
+                }
+                Spacer(modifier = Modifier.width(16.dp))
                 Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .constrainAs(cartTxt) { centerTo(parent) },
+                    text = title,
                     textAlign = TextAlign.Center,
                     fontWeight = FontWeight.Bold,
                     fontSize = 25.sp,
-                    text = title
-                )
-
-                Image(
-                    painter = painterResource(R.drawable.back),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .clickable { onBackClick() }
-                        .constrainAs(backBtn) {
-                            top.linkTo(parent.top)
-                            bottom.linkTo(parent.bottom)
-                            start.linkTo(parent.start)
-                        }
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
@@ -117,36 +112,30 @@ class ListItemsActivity : BaseActivity() {
                     CircularProgressIndicator()
                 }
             } else {
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.padding(16.dp)) {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.padding(16.dp)
+                ) {
                     items(items) { item ->
-                        val isFavorite = favoriteStates[item.title] ?: false
-
+                        val isFav = favoriteStates[item.title] ?: false
                         FavoriteItemCard(
                             item = item,
-                            isFavorite = isFavorite,
+                            isFavorite = isFav,
                             onFavoriteToggle = {
-                                val newValue = !isFavorite
+                                val newValue = !isFav
                                 favoriteStates[item.title] = newValue
-
-                                if (newValue) {
-                                    favoriteManager.insertFavorite(item)
-                                } else {
-                                    favoriteManager.removeFavorite(item)
-                                }
+                                if (newValue) favoriteManager.addFavorite(item)
+                                else favoriteManager.removeFavorite(item)
                             },
                             onClick = {
                                 val intent = Intent(context, DetailActivity::class.java)
                                 intent.putExtra("object", item)
-                                context.startActivity(intent, null)
+                                context.startActivity(intent)
                             }
                         )
                     }
                 }
             }
-        }
-
-        LaunchedEffect(items) {
-            isLoading = items.isEmpty()
         }
     }
 }
@@ -170,21 +159,18 @@ fun FavoriteItemCard(
             contentDescription = item.title,
             modifier = Modifier
                 .size(80.dp)
-                .clickable { onClick() }
+                .clickable(onClick = onClick)
         )
-
         Spacer(modifier = Modifier.width(12.dp))
-
         Column(modifier = Modifier.weight(1f)) {
             Text(text = item.title, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(4.dp))
             Text(text = "${item.price}₽", color = Color.Gray)
         }
-
         IconButton(onClick = onFavoriteToggle) {
             Icon(
                 painter = painterResource(
-                    if (isFavorite) R.drawable.ic_fav_filled
+                    id = if (isFavorite) R.drawable.ic_fav_filled
                     else R.drawable.ic_fav_border
                 ),
                 contentDescription = null,

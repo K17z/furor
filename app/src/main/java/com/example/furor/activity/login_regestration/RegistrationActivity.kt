@@ -1,0 +1,123 @@
+package com.example.furor.activity.login_regestration
+
+import android.os.Bundle
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.furor.utils.mainFieldStyle
+import com.example.furor.utils.makeToast
+import com.example.furor.utils.goTo
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
+
+class RegistrationActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            RegistrationScreen()
+        }
+    }
+
+    @Composable
+    fun RegistrationScreen() {
+        val context = LocalContext.current
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 32.dp)
+                .padding(top = 80.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            val emailField = mainFieldStyle(
+                labelText = "Почта",
+                enable    = true,
+                maxLine   = 1
+            ) {}
+            Spacer(modifier = Modifier.height(12.dp))
+
+            val passwordField = mainFieldStyle(
+                labelText = "Пароль",
+                enable    = true,
+                maxLine   = 1
+            ) {}
+            Spacer(modifier = Modifier.height(12.dp))
+
+            val confirmPasswordField = mainFieldStyle(
+                labelText = "Повторите пароль",
+                enable    = true,
+                maxLine   = 1
+            ) {}
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Button(onClick = {
+                when {
+                    emailField.isBlank() ->
+                        makeToast("Введите почту!", context)
+                    passwordField.isBlank() ->
+                        makeToast("Придумайте пароль!", context)
+                    confirmPasswordField != passwordField ->
+                        makeToast("Пароли не совпадают!", context)
+                    else -> {
+                        Firebase.auth
+                            .createUserWithEmailAndPassword(emailField, passwordField)
+                            .addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    Firebase.auth.currentUser
+                                        ?.sendEmailVerification()
+                                        ?.addOnCompleteListener { verifyTask ->
+                                            if (verifyTask.isSuccessful) {
+                                                makeToast(
+                                                    "Письмо для подтверждения отправлено.",
+                                                    context
+                                                )
+                                                goTo(LoginActivity::class.java, context)
+                                                finish()
+                                            } else {
+                                                makeToast(
+                                                    "Ошибка при отправке письма: " +
+                                                            "${verifyTask.exception?.message}",
+                                                    context
+                                                )
+                                            }
+                                        }
+                                } else {
+                                    makeToast(
+                                        "Ошибка регистрации: ${task.exception?.message}",
+                                        context
+                                    )
+                                }
+                            }
+                    }
+                }
+            }) {
+                Text(text = "Зарегистрироваться", fontSize = 18.sp)
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "Уже есть аккаунт? Войти",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier
+                    .clickable {
+                        goTo(LoginActivity::class.java, context)
+                        finish()
+                    }
+            )
+        }
+    }
+}

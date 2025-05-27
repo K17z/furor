@@ -32,51 +32,58 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat.startActivity
 import coil.compose.AsyncImage
-import com.example.furor.model.ItemsModel
 import com.example.furor.R
+import com.example.furor.model.ItemsModel
 import com.example.furor.activity.DetailActivity
 
+
+
 @Composable
-fun PopularItems(items:List<ItemsModel>, pos:Int){
-    val context= LocalContext.current
+fun PopularItems(items: List<ItemsModel>, pos: Int) {
+    val context = LocalContext.current
 
-    Column (modifier = Modifier
-        .padding(8.dp)
-        .wrapContentHeight()
-    ){
-
+    Column(
+        modifier = Modifier
+            .padding(8.dp)
+            .wrapContentHeight()
+    ) {
         AsyncImage(
             model = items[pos].picUrl.firstOrNull(),
             contentDescription = items[pos].title,
             modifier = Modifier
                 .width(175.dp)
-                .background(colorResource(R.color.Sandyellow),
-                    shape = RoundedCornerShape(10.dp))
                 .height(195.dp)
+                .background(
+                    colorResource(R.color.Sandyellow),
+                    shape = RoundedCornerShape(10.dp)
+                )
                 .clickable {
                     val intent = Intent(context, DetailActivity::class.java).apply {
                         putExtra("object", items[pos])
                     }
-                    startActivity(context,intent,null)
-                }, contentScale = ContentScale.Crop
+                    context.startActivity(intent)
+                },
+            contentScale = ContentScale.Crop
         )
         Text(
-            text=items[pos].title,
+            text = items[pos].title,
             color = Color.Black,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top=8.dp)
+            modifier = Modifier.padding(top = 8.dp)
         )
-        Row (
-            modifier = Modifier.width(175.dp).padding(top=4.dp)
-        ){
+        Row(
+            modifier = Modifier
+                .width(175.dp)
+                .padding(top = 4.dp)
+        ) {
             Row {
-                Image(painter = painterResource(id=R.drawable.star)
-                    , contentDescription = "Rating",
+                Image(
+                    painter = painterResource(id = R.drawable.star),
+                    contentDescription = "Rating",
                     modifier = Modifier.align(Alignment.CenterVertically)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -99,28 +106,29 @@ fun PopularItems(items:List<ItemsModel>, pos:Int){
 }
 
 @Composable
-fun ListItems(items:List<ItemsModel>){
-    LazyRow (modifier = Modifier
-        .padding(top=8.dp)
-        .padding(horizontal = 8.dp),
+fun ListItems(items: List<ItemsModel>) {
+    LazyRow(
+        modifier = Modifier
+            .padding(top = 8.dp)
+            .padding(horizontal = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ){
-        items(items.size) {index: Int->
-            PopularItems(items,index)
+    ) {
+        items(items.size) { index: Int ->
+            PopularItems(items, index)
         }
     }
 }
 
 @Composable
-fun ListItemsFullSize(items:List<ItemsModel>){
+fun ListItemsFullSize(items: List<ItemsModel>) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 8.dp, vertical = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ){
-        items(items.size){row ->
+    ) {
+        items(items.size) { row ->
             PopularItems(items, row)
         }
     }
