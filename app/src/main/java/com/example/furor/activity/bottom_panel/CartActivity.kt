@@ -87,7 +87,7 @@ fun CartScreen(
             .fillMaxSize()
             .padding(horizontal = 16.dp) // только горизонтальные отступы
     ) {
-        // Пробел сверху, чтобы заголовок и кнопка «назад» были чуть ниже
+        // Пробел сверху
         Spacer(modifier = Modifier.height(32.dp))
 
         // Заголовок с кнопкой «назад»
