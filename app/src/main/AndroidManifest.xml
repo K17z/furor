@@ -13,6 +13,9 @@
         android:theme="@style/Theme.Furor"
         tools:targetApi="31">
         <activity
+            android:name=".activity.login_regestration.CartActivity"
+            android:exported="false" />
+        <activity
             android:name=".Model.OrderModel.kt"
             android:exported="false" />
         <activity

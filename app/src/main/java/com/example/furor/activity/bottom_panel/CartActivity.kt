@@ -1,32 +1,21 @@
 package com.example.furor.activity.bottom_panel
 
-import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableDoubleStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,205 +27,119 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.constraintlayout.compose.ConstraintLayout
-import coil.compose.rememberAsyncImagePainter
-import com.example.furor.model.ItemsModel
-import androidx.lifecycle.viewmodel.compose.viewModel
-
+import coil.compose.AsyncImage
 import com.example.furor.R
-import com.example.furor.viewModel.CartItemsViewModal
-import com.example.project1762.Helper.ChangeNumberItemsListener
-import com.example.project1762.Helper.ManagmentCart
-import java.util.ArrayList
-import android.widget.Toast
-import android.content.Intent
 import com.example.furor.activity.BaseActivity
-
+import com.example.furor.Helper.ManagmentCart
+import com.example.furor.model.ItemsModel
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.*
 
 class CartActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-
         super.onCreate(savedInstanceState)
+        val manager = ManagmentCart(this)
         setContent {
             CartScreen(
-                ManagmentCart(this),
-                onBackClick = {
-                    finish()
-                })
+                managmentCart = manager,
+                onBackClick = { finish() }
+            )
         }
     }
 }
 
-fun calculatorCart(managmentCart: ManagmentCart, tax: MutableState<Double>) {
-    val percentTax = 0.02
-    tax.value = Math.round((managmentCart.getTotalFee() * percentTax) * 100) / 100.0
-}
-
-@SuppressLint("MutableCollectionMutableState")
 @Composable
-private fun CartScreen(
-    managmentCart: ManagmentCart = ManagmentCart(LocalContext.current),
+fun CartScreen(
+    managmentCart: ManagmentCart,
     onBackClick: () -> Unit
 ) {
-    val cartItems = remember { mutableStateOf(managmentCart.getListCart()) }
-    val tax = remember { mutableDoubleStateOf(0.0) }
+    val context = LocalContext.current
 
-    calculatorCart(managmentCart, tax)
+    // Состояние корзины из Firebase
+    val cartItems = remember { mutableStateListOf<ItemsModel>() }
+    var tax by remember { mutableStateOf(0.0) }
+    val delivery = 10.0
+
+    // Подписка на узел "cart/{uid}"
+    LaunchedEffect(Unit) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return@LaunchedEffect
+        val ref = FirebaseDatabase.getInstance()
+            .getReference("cart")
+            .child(uid)
+        ref.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                cartItems.clear()
+                snapshot.children.mapNotNull {
+                    it.getValue(ItemsModel::class.java)
+                }.also { list -> cartItems.addAll(list) }
+                tax = ((cartItems.sumOf { it.price * it.numberInCart }) * 0.02 * 100).toInt() / 100.0
+            }
+            override fun onCancelled(error: DatabaseError) {
+                Toast.makeText(context, "Не удалось загрузить корзину", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    BackHandler { onBackClick() }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(horizontal = 16.dp) // только горизонтальные отступы
     ) {
-        ConstraintLayout(modifier = Modifier.padding(top = 36.dp)) {
-            val (backBtn, cartTxt) = createRefs()
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .constrainAs(cartTxt) { centerTo(parent) }, text = "Ваша корзина",
-                textAlign = TextAlign.Center,
-                fontWeight = FontWeight.Bold,
-                fontSize = 25.sp
-            )
+        // Пробел сверху, чтобы заголовок и кнопка «назад» были чуть ниже
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Заголовок с кнопкой «назад»
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Image(
                 painter = painterResource(R.drawable.back),
                 contentDescription = null,
                 modifier = Modifier
+                    .size(24.dp)
                     .clickable { onBackClick() }
-                    .constrainAs(backBtn) {
-                        top.linkTo(parent.top)
-                        bottom.linkTo(parent.bottom)
-                        start.linkTo(parent.start)
-                    }
             )
+            Spacer(Modifier.weight(1f))
+            Text(
+                text = "Ваша корзина",
+                fontSize = 25.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.weight(4f)
+            )
+            Spacer(Modifier.weight(1f))
         }
-        when (cartItems.value.isEmpty()){
-            true ->
-                Text(text = "Корзина пуста", modifier = Modifier.align(Alignment.CenterHorizontally))
 
-            false -> {
-                CartList(cartItems = cartItems.value, managmentCart) {
-                    cartItems.value = managmentCart.getListCart()
-                    calculatorCart(managmentCart, tax)
+        Spacer(modifier = Modifier.height(16.dp)) // отступ между заголовком и контентом
+
+        if (cartItems.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Корзина пуста")
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(top = 0.dp)
+            ) {
+                items(cartItems) { item ->
+                    CartItem(
+                        item = item,
+                        managmentCart = managmentCart
+                    )
                 }
-                CartSummary(
-                    itemTotal = managmentCart.getTotalFee(),
-                    tax = tax.value,
-                    delivery = 10.0,
-                    managmentCart = managmentCart
-                )
             }
-
-        }
-    }
-}
-
-
-@Composable
-fun CartSummary(itemTotal: Double, tax: Double, delivery: Double, managmentCart: ManagmentCart) {
-    val context = LocalContext.current
-
-    val total=itemTotal + tax + delivery
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 16.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp)
-        ) {
-            Text(
-                text = "Итоговая цена:",
-                Modifier.weight(1f),
-                fontWeight = FontWeight.Bold,
-                color = colorResource(R.color.Brown)
-            )
-            Text(text = "$itemTotal₽")
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp)
-        ) {
-            Text(
-                text = "Налог:",
-                Modifier.weight(1f),
-                fontWeight = FontWeight.Bold,
-                color = colorResource(R.color.Brown)
-            )
-            Text(text = "$tax")
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp)
-        ) {
-            Text(
-                text = "Доставка:",
-                Modifier.weight(1f),
-                fontWeight = FontWeight.Bold,
-                color = colorResource(R.color.Brown)
-            )
-            Text(text = "$delivery")
-        }
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp)
-            ) {
-                Text(
-                    text = "Итог:",
-                    Modifier.weight(1f),
-                    fontWeight = FontWeight.Bold,
-                    color = colorResource(R.color.Brown)
-                )
-                Text(text = "$total")
-            }
-            Button(
-                onClick = {
-                    managmentCart.placeOrder()
-                    Toast.makeText(context, "Заказ оформлен", Toast.LENGTH_SHORT).show()
-                    context.startActivity(Intent(context, OrdersActivity::class.java))
-                },
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = colorResource(R.color.Brown)
-                ),
-                modifier = Modifier
-                    .padding(top = 16.dp)
-                    .fillMaxWidth()
-                    .height(50.dp)
-            ) {
-                Text(
-                    text = "Оформить заказ",
-                    fontSize = 18.sp,
-                    color = Color.White
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun CartList(
-    cartItems: ArrayList<ItemsModel>,
-    managmentCart: ManagmentCart,
-    onItemChange: () -> Unit
-) {
-    LazyColumn(Modifier.padding(top = 16.dp)) {
-        items(cartItems) { item ->
-            CartItem(
-                cartItems,
-                item = item,
-                managmentCart = managmentCart,
-                onItemChange = onItemChange
+            CartSummary(
+                itemTotal = cartItems.sumOf { it.price * it.numberInCart },
+                tax = tax,
+                delivery = delivery,
+                managmentCart = managmentCart
             )
         }
     }
@@ -244,173 +147,124 @@ fun CartList(
 
 @Composable
 fun CartItem(
-    cartItems: ArrayList<ItemsModel>,
     item: ItemsModel,
-    managmentCart: ManagmentCart,
-    onItemChange: () -> Unit,
-    cartItemsViewModal: CartItemsViewModal = viewModel()
+    managmentCart: ManagmentCart
 ) {
     val context = LocalContext.current
 
-    ConstraintLayout(
+    // Берём актуальный список и позицию элемента
+    val currentList = managmentCart.getListCart()
+    val position = currentList.indexOfFirst { it.title == item.title }
+
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 8.dp, bottom = 8.dp)
+            .padding(vertical = 8.dp)
     ) {
-        val (pic, titleTxt, feeEachItem, totalEachItem, Quantity) = createRefs()
-
-        Image(
-            painter = rememberAsyncImagePainter(item.picUrl[0]),
+        // Картинка товара
+        AsyncImage(
+            model = item.picUrl.firstOrNull(),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .size(90.dp)
-                .background(
-                    colorResource(R.color.Brown),
-                    shape = RoundedCornerShape(10.dp)
-                )
+                .background(Color.LightGray, RoundedCornerShape(10.dp))
+        )
+        Spacer(Modifier.width(8.dp))
 
-                .constrainAs(pic) {
-                    start.linkTo(parent.start)
-                    top.linkTo(parent.top)
-                    bottom.linkTo(parent.bottom)
-                }
-        )
-        Text(
-            text = item.title,
-            modifier = Modifier
-                .constrainAs(titleTxt) {
-                    start.linkTo(pic.end)
-                    top.linkTo(pic.top)
-                }
-                .padding(start = 8.dp, top = 8.dp)
-        )
-        Text(
-            text = "${item.price}₽", color = colorResource(R.color.Brown), modifier = Modifier
-                .constrainAs(feeEachItem) {
-                    start.linkTo(titleTxt.start)
-                    top.linkTo(titleTxt.bottom)
-                }
-                .padding(start = 8.dp, top = 8.dp)
-        )
+        // Текст (название, цена за единицу, итоговая цена)
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(item.title)
+            Text(
+                text = "${item.price}₽",
+                color = colorResource(R.color.Brown)
+            )
+            Text(
+                text = "${item.price * item.numberInCart}₽",
+                fontWeight = FontWeight.Bold
+            )
+        }
 
-        Text(
-            text = cartItemsViewModal.getFinalPrice(cartItems.indexOf(item).toString(), item.price).toString(),
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier
-                .constrainAs(totalEachItem) {
-                    start.linkTo(titleTxt.start)
-                    bottom.linkTo(pic.bottom)
-                }
-                .padding(start = 8.dp)
-        )
-        ConstraintLayout(
+        // Блок с «–  count  +»
+        Box(
             modifier = Modifier
                 .width(100.dp)
-                .constrainAs(Quantity) {
-                    end.linkTo(parent.end)
-                    bottom.linkTo(parent.bottom)
-                }
-                .background(
-                    colorResource(R.color.Brown),
-                    shape = RoundedCornerShape(100.dp)
-                )
+                .background(colorResource(R.color.Brown), RoundedCornerShape(50.dp)),
+            contentAlignment = Alignment.Center
         ) {
-            val (plusCartBtn, minusCartBtn, numberItemText) = createRefs()
-
-            //Счётчик предметов
-            Text(
-                text = cartItemsViewModal.getCount(cartItems.indexOf(item).toString()).toString(),
-                color = Color.Black,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.constrainAs(numberItemText) {
-                    end.linkTo(parent.end)
-                    start.linkTo(parent.start)
-                    top.linkTo(parent.top)
-                    bottom.linkTo(parent.bottom)
-                }
-            )
-
-            Box(
-                modifier = Modifier
-                    .padding(2.dp)
-                    .size(28.dp)
-                    .background(
-                        colorResource(R.color.Brown),
-                        shape = RoundedCornerShape(100.dp)
-                    )
-                    .constrainAs(plusCartBtn) {
-                        end.linkTo(parent.end)
-                        top.linkTo(parent.top)
-                        bottom.linkTo(parent.bottom)
-                    }
-                    .clickable {
-                        cartItemsViewModal.plusCount(cartItems.indexOf(item).toString(), item.price, context)
-
-                        managmentCart.plusItem(
-                            cartItems,
-                            cartItems.indexOf(item),
-                            object : ChangeNumberItemsListener {
-                                override fun onChanged() {
-                                    onItemChange()
-                                }
-                            }
-                        )
-                    }
-            ) {
-                Text(
-                    text = "+",
-                    color = Color.White,
-                    modifier = Modifier.align(Alignment.Center),
-                    textAlign = TextAlign.Center
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .padding(2.dp)
-                    .size(28.dp)
-                    .background(
-                        colorResource(R.color.Brown),
-                        shape = RoundedCornerShape(100.dp)
-                    )
-                    .constrainAs(minusCartBtn) {
-                        start.linkTo(parent.start)
-                        top.linkTo(parent.top)
-                        bottom.linkTo(parent.bottom)
-                    }
-                    .clickable {
-                        if (cartItemsViewModal.getCount(cartItems.indexOf(item).toString()) > 0)
-                            cartItemsViewModal.minusCount(cartItems.indexOf(item).toString(), item.price, context)
-
-                        managmentCart.minusItem(
-                            cartItems,
-                            cartItems.indexOf(item), object : ChangeNumberItemsListener {
-                                override fun onChanged() {
-                                    onItemChange()
-                                }
-                            })
-                    }
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = "-",
-                    color = Color.White,
-                    modifier = Modifier.align(Alignment.Center),
-                    textAlign = TextAlign.Center
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .clickable {
+                            managmentCart.minusItem(currentList, position)
+                        }
+                )
+                Text(
+                    text = "${item.numberInCart}",
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                )
+                Text(
+                    text = "+",
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .clickable {
+                            managmentCart.plusItem(currentList, position)
+                        }
                 )
             }
         }
     }
+}
 
-    //Триггеры
+@Composable
+fun CartSummary(
+    itemTotal: Double,
+    tax: Double,
+    delivery: Double,
+    managmentCart: ManagmentCart
+) {
+    val context = LocalContext.current
+    val total = itemTotal + tax + delivery
 
-    //Срабатывает при заходе и выходе со страницы
-    DisposableEffect(Unit) {
-        cartItemsViewModal.loadCounts(context)
-        cartItemsViewModal.loadPrice(context)
-        onDispose {
-            cartItemsViewModal.saveCounts(context)
-            cartItemsViewModal.savePrice(context)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp)
+    ) {
+        SummaryRow("Итоговая цена:", "$itemTotal₽")
+        SummaryRow("Налог:", "$tax₽")
+        SummaryRow("Доставка:", "$delivery₽")
+        SummaryRow("Итог:", "$total₽")
+        Spacer(Modifier.height(8.dp))
+        Button(
+            onClick = {
+                managmentCart.placeOrder()
+                Toast.makeText(context, "Заказ оформлен", Toast.LENGTH_SHORT).show()
+                context.startActivity(Intent(context, OrdersActivity::class.java))
+            },
+            shape = RoundedCornerShape(10.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = colorResource(R.color.Brown)),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+        ) {
+            Text("Оформить заказ", fontSize = 18.sp, color = Color.White)
         }
+    }
+}
+
+@Composable
+private fun SummaryRow(label: String, value: String) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+    ) {
+        Text(label, Modifier.weight(1f), fontWeight = FontWeight.Bold)
+        Text(value)
     }
 }
