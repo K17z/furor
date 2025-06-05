@@ -50,7 +50,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
 import com.example.furor.Helper.ManagmentCart
-import com.example.furor.activity.bottom_panel.CartActivity
+import com.example.furor.Helper.CartActivity
 import java.util.ArrayList
 
 class DetailActivity : BaseActivity() {

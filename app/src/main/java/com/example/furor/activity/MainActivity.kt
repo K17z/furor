@@ -3,7 +3,6 @@ package com.example.furor.activity
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -33,7 +32,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.furor.R
-import com.example.furor.activity.bottom_panel.CartActivity
+import com.example.furor.Helper.CartActivity
 import com.example.furor.activity.bottom_panel.FavoriteActivity
 import com.example.furor.activity.bottom_panel.OrdersActivity
 import com.example.furor.activity.bottom_panel.ProfileActivity
@@ -176,6 +175,7 @@ fun MainActivityScreen(onCartClick: () -> Unit) {
 
 @Composable
 private fun HeaderRow() {
+    val context = LocalContext.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -195,14 +195,11 @@ private fun HeaderRow() {
         Row {
             Icon(
                 painterResource(id = R.drawable.search_icon),
-                contentDescription = null,
-                tint = Color.Unspecified
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Icon(
-                painterResource(id = R.drawable.bell_icon),
-                contentDescription = null,
-                tint = Color.Unspecified
+                contentDescription = "Поиск",
+                tint = Color.Unspecified,
+                modifier = Modifier.clickable {
+                    context.startActivity(Intent(context, SearchActivity::class.java))
+                }
             )
         }
     }

@@ -1,4 +1,4 @@
-package com.example.furor.activity.bottom_panel
+package com.example.furor.Helper
 
 import android.content.Intent
 import android.os.Bundle
@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.furor.R
 import com.example.furor.activity.BaseActivity
-import com.example.furor.Helper.ManagmentCart
+import com.example.furor.activity.bottom_panel.OrdersActivity
 import com.example.furor.model.ItemsModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
