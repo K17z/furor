@@ -28,8 +28,7 @@ import coil.compose.AsyncImage
 import com.example.furor.model.ItemsModel
 import com.google.firebase.database.*
 import android.content.Intent
-import com.example.furor.R
-import com.example.furor.activity.DetailActivity
+
 
 class SearchActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
