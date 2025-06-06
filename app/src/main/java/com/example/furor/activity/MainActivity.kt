@@ -51,6 +51,20 @@ import com.google.firebase.auth.FirebaseAuth
 import androidx.core.content.ContextCompat.startActivity
 import android.os.Handler
 import android.os.Looper
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 
 
 class MainActivity : BaseActivity() {
@@ -87,6 +101,7 @@ class MainActivity : BaseActivity() {
         }
     }
 }
+
 
 @Composable
 fun MainActivityScreen(onCartClick: () -> Unit) {
@@ -201,6 +216,24 @@ private fun HeaderRow() {
                     context.startActivity(Intent(context, SearchActivity::class.java))
                 }
             )
+            Spacer(Modifier.width(16.dp))
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(Color(0xFFF0F0F0), CircleShape)
+                    .clip(CircleShape)
+                    .clickable {
+                        context.startActivity(Intent(context, FilterActivity::class.java))
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painterResource(id = R.drawable.ic_filter),
+                    contentDescription = "Фильтр",
+                    tint = Color.Black,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
     }
 }
@@ -370,19 +403,19 @@ fun BottomMenu(modifier: Modifier, onItemClick: () -> Unit) {
             .background(colorResource(R.color.Brown), shape = RoundedCornerShape(10.dp)),
         horizontalArrangement = Arrangement.SpaceAround
     ) {
-        BottomMenuItem(icon = painterResource(R.drawable.btn_1), text = "Explorer")
+
         BottomMenuItem(
             icon = painterResource(R.drawable.btn_2),
-            text = "Cart",
+            text = "Корзина",
             onItemClick = onItemClick
         )
-        BottomMenuItem(icon = painterResource(R.drawable.btn_3), text = "Favorite") {
+        BottomMenuItem(icon = painterResource(R.drawable.btn_3), text = "Избранное") {
             goTo(FavoriteActivity::class.java, context)
         }
-        BottomMenuItem(icon = painterResource(R.drawable.btn_4), text = "Orders") {
+        BottomMenuItem(icon = painterResource(R.drawable.btn_4), text = "Заказы") {
             goTo(OrdersActivity::class.java, context)
         }
-        BottomMenuItem(icon = painterResource(R.drawable.btn_5), text = "Profile") {
+        BottomMenuItem(icon = painterResource(R.drawable.btn_5), text = "Профиль") {
             goTo(ProfileActivity::class.java, context)
         }
     }
@@ -401,5 +434,86 @@ fun BottomMenuItem(icon: Painter, text: String, onItemClick: (() -> Unit)? = nul
         Icon(icon, contentDescription = text, tint = Color.White)
         Spacer(modifier = Modifier.height(4.dp))
         Text(text, color = Color.White, fontSize = 10.sp)
+    }
+}
+@Composable
+fun FilterBottomSheet(
+    colors: List<String>,
+    models: List<String>,
+    categories: List<String>,
+    selectedColors: List<String>,
+    selectedModels: List<String>,
+    selectedCategories: List<String>,
+    onColorSelected: (String) -> Unit,
+    onModelSelected: (String) -> Unit,
+    onCategorySelected: (String) -> Unit,
+    onApply: () -> Unit,
+    onClear: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Column(Modifier.padding(16.dp)) {
+        Text("Фильтр", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+        Spacer(Modifier.height(16.dp))
+        Text("Цвета:", fontWeight = FontWeight.SemiBold)
+        Row(Modifier.horizontalScroll(rememberScrollState())) {
+            colors.forEach { color ->
+                FilterButton(
+                    text = color,
+                    selected = selectedColors.contains(color),
+                    onClick = { onColorSelected(color) }
+                )
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+        Text("Размер:", fontWeight = FontWeight.SemiBold)
+        Row(Modifier.horizontalScroll(rememberScrollState())) {
+            models.forEach { model ->
+                FilterButton(
+                    text = model,
+                    selected = selectedModels.contains(model),
+                    onClick = { onModelSelected(model) }
+                )
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+        Text("Категория:", fontWeight = FontWeight.SemiBold)
+        Row(Modifier.horizontalScroll(rememberScrollState())) {
+            categories.forEach { category ->
+                FilterButton(
+                    text = category,
+                    selected = selectedCategories.contains(category),
+                    onClick = { onCategorySelected(category) }
+                )
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+        Row {
+            Button(onClick = onApply, modifier = Modifier.weight(1f)) { Text("Применить") }
+            Spacer(Modifier.width(8.dp))
+            Button(onClick = onClear, modifier = Modifier.weight(1f)) { Text("Сбросить") }
+        }
+        Spacer(Modifier.height(8.dp))
+        Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
+            Text("Закрыть")
+        }
+    }
+}
+@Composable
+fun FilterButton(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Button(
+        onClick = onClick,
+        shape = RoundedCornerShape(50),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (selected) Color(0xFF7E57C2) else Color(0xFFF6EFD9),
+            contentColor = if (selected) Color.White else Color.Black
+        ),
+        modifier = modifier.padding(end = 6.dp, bottom = 4.dp)
+    ) {
+        Text(text, fontWeight = FontWeight.Bold)
     }
 }
