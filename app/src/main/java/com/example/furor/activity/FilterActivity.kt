@@ -53,9 +53,9 @@ fun FilterScreen(onBack: () -> Unit) {
     var selectedRating by remember { mutableStateOf(0f) }
     var isFilterApplied by remember { mutableStateOf(false) }
 
-    // Цвета из второй фотографии (примерно)
+
     val Brown = Color(0xFF7C5C38)        // Основной коричневый
-    val LightBrown = Color(0xFFF8EFD9)   // Молочный-бежевый
+    val LightBrown = Color(0xFFFFFFFF)   // Молочный-бежевый
     val TextBlack = Color(0xFF272727)
     val Accent = Color(0xFFB9A078)       // Дополнительный светло-коричневый
 
